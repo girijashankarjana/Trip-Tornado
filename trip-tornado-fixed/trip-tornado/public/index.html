@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Trip Tornado — AI Travel Planner</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --sand: #fff8ee;
+    --ink: #2d1a00;
+    --slate: #7a5c3a;
+    --teal: #f4720a;
+    --teal-light: #ff8c2a;
+    --coral: #f9a825;
+    --gold: #ffe066;
+    --card-bg: #ffffff;
+    --border: #f5ddb0;
+    --radius: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--sand);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: #f97316;
+    color: white;
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(249,115,22,0.25);
+  }
+  .logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    letter-spacing: 0.02em;
+    display: flex;
+    align-items: center;
+    gap: 0.1rem;
+    line-height: 1;
+  }
+  .logo span {
+    font-style: italic;
+    font-weight: 700;
+    color: #fff3c4;
+    background: none;
+    -webkit-text-fill-color: #fff3c4;
+  }
+  .tagline { font-size: 0.8rem; color: rgba(255,255,255,0.75); font-weight: 300; }
+
+  /* HERO */
+  .hero {
+    background: linear-gradient(160deg, #ffe566 0%, #ffb347 50%, #f97316 100%);
+    color: #2d1a00;
+    padding: 4rem 2rem 3rem;
+    text-align: center;
+  }
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    line-height: 1.2;
+    margin-bottom: 1rem;
+    color: #2d1a00;
+  }
+  .hero h1 em { color: #c85a00; font-style: italic; }
+  .hero p { color: #5a3200; font-size: 1rem; font-weight: 400; max-width: 540px; margin: 0 auto 2rem; }
+
+  .trip-bar {
+    display: flex;
+    gap: 0.75rem;
+    max-width: 680px;
+    margin: 0 auto;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .trip-bar input, .trip-bar select {
+    flex: 1;
+    min-width: 140px;
+    padding: 0.75rem 1rem;
+    border: 1.5px solid rgba(255,255,255,0.6);
+    background: #ffffff;
+    color: #2d1a00;
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border 0.2s;
+  }
+  .trip-bar input::placeholder { color: #b07040; }
+  .trip-bar input:focus, .trip-bar select:focus { border-color: #c85a00; box-shadow: 0 0 0 3px rgba(200,90,0,0.15); }
+  .trip-bar select option { background: white; color: #2d1a00; }
+  .btn-plan {
+    padding: 0.75rem 1.5rem;
+    background: var(--teal);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    white-space: nowrap;
+  }
+  .btn-plan:hover { background: var(--teal-light); transform: translateY(-1px); }
+  .btn-plan:active { transform: translateY(0); }
+
+  /* MAIN */
+  main { max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 0;
+    flex-wrap: wrap;
+  }
+  .tab {
+    padding: 0.6rem 1.2rem;
+    border: none;
+    background: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--slate);
+    cursor: pointer;
+    border-bottom: 2.5px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .tab:hover { color: var(--teal); }
+  .tab.active { color: var(--teal); border-bottom-color: var(--teal); font-weight: 600; }
+  .tab-icon { font-size: 1rem; }
+
+  /* PANELS */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* CARDS */
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+  .card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    color: var(--ink);
+  }
+  .card p { color: var(--slate); font-size: 0.9rem; line-height: 1.6; margin-bottom: 1rem; }
+  .card p:last-child { margin-bottom: 0; }
+
+  /* FORM ELEMENTS */
+  .field { margin-bottom: 1rem; }
+  .field label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--slate);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.35rem;
+  }
+  .field input, .field select, .field textarea {
+    width: 100%;
+    padding: 0.7rem 1rem;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    color: var(--ink);
+    background: white;
+    outline: none;
+    transition: border 0.2s;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--teal); }
+  .field textarea { min-height: 80px; resize: vertical; }
+
+  .fields-row { display: flex; gap: 1rem; }
+  .fields-row .field { flex: 1; }
+
+  /* BUTTONS */
+  .btn {
+    padding: 0.65rem 1.3rem;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+  }
+  .btn-primary { background: var(--teal); color: white; }
+  .btn-primary:hover { background: var(--teal-light); }
+  .btn-secondary { background: transparent; color: var(--teal); border: 1.5px solid var(--teal); }
+  .btn-secondary:hover { background: rgba(42,157,143,0.06); }
+
+  /* AI RESPONSE */
+  .ai-box {
+    background: linear-gradient(135deg, #fff8ee, #fff3d6);
+    border: 1.5px solid #f5c97a;
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    margin-top: 1rem;
+    display: none;
+  }
+  .ai-box.visible { display: block; }
+  .ai-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--teal);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.6rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .ai-label::before { content: '✦'; }
+  .ai-content {
+    font-size: 0.92rem;
+    color: var(--ink);
+    line-height: 1.7;
+    white-space: pre-wrap;
+  }
+
+  /* SPINNER */
+  .spinner {
+    display: inline-block;
+    width: 16px; height: 16px;
+    border: 2.5px solid rgba(42,157,143,0.2);
+    border-top-color: var(--teal);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin-right: 0.5rem;
+    vertical-align: middle;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* DESTINATION GRID */
+  .dest-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem; margin-top: 1rem; }
+  .dest-chip {
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: white;
+  }
+  .dest-chip:hover { border-color: var(--teal); background: #f0faf9; transform: translateY(-2px); }
+  .dest-chip.selected { border-color: var(--teal); background: #e8f7f5; }
+  .dest-emoji { font-size: 2rem; display: block; margin-bottom: 0.3rem; }
+  .dest-name { font-weight: 600; font-size: 0.9rem; color: var(--ink); }
+  .dest-vibe { font-size: 0.75rem; color: var(--slate); margin-top: 0.2rem; }
+
+  /* ITINERARY */
+  .day-block {
+    border-left: 3px solid var(--teal);
+    padding-left: 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+  .day-label {
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--teal);
+    margin-bottom: 0.4rem;
+  }
+
+  /* BUDGET */
+  .budget-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.9rem;
+  }
+  .budget-row:last-child { border-bottom: none; }
+  .budget-label { color: var(--slate); }
+  .budget-amount { font-weight: 600; color: var(--ink); }
+  .budget-total { background: linear-gradient(90deg, #2d1a00, #7a3800); color: white; padding: 1rem 1.5rem; border-radius: var(--radius); margin-top: 1rem; display: flex; justify-content: space-between; align-items: center; }
+  .budget-total .label { font-size: 0.85rem; opacity: 0.8; }
+  .budget-total .amount { font-family: 'Playfair Display', serif; font-size: 1.4rem; }
+
+  /* INFO CHIPS */
+  .info-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
+  .chip {
+    padding: 0.3rem 0.75rem;
+    border-radius: 100px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    background: #f0f0f0;
+    color: var(--slate);
+  }
+  .chip.teal { background: #e8f7f5; color: var(--teal); }
+  .chip.coral { background: #fdf0ec; color: var(--coral); }
+  .chip.gold { background: #fdf8e8; color: #b8860b; }
+
+  /* NOTICE */
+  .notice {
+    background: #fff3e0;
+    border: 1px solid #ffb74d;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    font-size: 0.82rem;
+    color: #7a4000;
+    margin-bottom: 1.25rem;
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-start;
+  }
+
+  @media (max-width: 600px) {
+    .fields-row { flex-direction: column; }
+    .trip-bar { flex-direction: column; }
+    .trip-bar input, .trip-bar select, .btn-plan { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Trip<span>Tornado</span></div>
+  <div class="tagline">AI-Powered Travel Planning</div>
+</header>
+
+<div class="hero">
+  <h1>Plan your next trip with<br/><em>AI as your co-pilot</em></h1>
+  <p>Discover destinations, build itineraries, compare bookings, and estimate budgets — all in one place.</p>
+  <div class="trip-bar">
+    <input type="text" id="globalDest" placeholder="Where to? (e.g. Tokyo, Amalfi)"/>
+    <input type="number" id="globalDays" placeholder="Days" min="1" max="30" style="max-width:90px"/>
+    <select id="globalBudget">
+      <option value="">Budget</option>
+      <option>Budget</option>
+      <option>Mid-range</option>
+      <option>Luxury</option>
+    </select>
+    <button class="btn-plan" onclick="startPlanning()">✦ Start Planning</button>
+  </div>
+</div>
+
+<main>
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('discover')"><span class="tab-icon">🌍</span> Discover</button>
+    <button class="tab" onclick="showTab('itinerary')"><span class="tab-icon">🗓️</span> Itinerary</button>
+    <button class="tab" onclick="showTab('bookings')"><span class="tab-icon">✈️</span> Flights & Hotels</button>
+    <button class="tab" onclick="showTab('budget')"><span class="tab-icon">💰</span> Budget</button>
+  </div>
+
+  <!-- DISCOVER -->
+  <div class="panel active" id="panel-discover">
+    <div class="card">
+      <div class="card-title">Find your perfect destination</div>
+      <p>Tell the AI what kind of trip you're dreaming of and get personalized recommendations.</p>
+      <div class="field">
+        <label>Describe your ideal trip</label>
+        <textarea id="discoverPrompt" placeholder="e.g. I want a relaxing beach trip in Southeast Asia for 10 days, I love local food and don't like big crowds..."></textarea>
+      </div>
+      <div class="fields-row">
+        <div class="field">
+          <label>Travel style</label>
+          <select id="travelStyle">
+            <option>Adventure & outdoors</option>
+            <option>Culture & history</option>
+            <option>Beach & relaxation</option>
+            <option>Food & nightlife</option>
+            <option>Family-friendly</option>
+            <option>Romantic getaway</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Season</label>
+          <select id="travelSeason">
+            <option>Any time</option>
+            <option>Spring</option>
+            <option>Summer</option>
+            <option>Autumn</option>
+            <option>Winter</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="getDestinations()">✦ Get AI Recommendations</button>
+      <div class="ai-box" id="discover-ai">
+        <div class="ai-label">AI Recommendations</div>
+        <div class="ai-content" id="discover-ai-content"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Popular destinations</div>
+      <p>Click any destination to pre-fill your trip details.</p>
+      <div class="dest-grid">
+        <div class="dest-chip" onclick="selectDest('Kyoto, Japan','🏯','Culture & temples')">
+          <span class="dest-emoji">🏯</span>
+          <div class="dest-name">Kyoto</div>
+          <div class="dest-vibe">Culture & temples</div>
+        </div>
+        <div class="dest-chip" onclick="selectDest('Amalfi Coast, Italy','🍋','Scenic & romantic')">
+          <span class="dest-emoji">🍋</span>
+          <div class="dest-name">Amalfi Coast</div>
+          <div class="dest-vibe">Scenic & romantic</div>
+        </div>
+        <div class="dest-chip" onclick="selectDest('Bali, Indonesia','🌺','Beach & wellness')">
+          <span class="dest-emoji">🌺</span>
+          <div class="dest-name">Bali</div>
+          <div class="dest-vibe">Beach & wellness</div>
+        </div>
+        <div class="dest-chip" onclick="selectDest('Patagonia, Argentina','🏔️','Adventure & nature')">
+          <span class="dest-emoji">🏔️</span>
+          <div class="dest-name">Patagonia</div>
+          <div class="dest-vibe">Adventure & nature</div>
+        </div>
+        <div class="dest-chip" onclick="selectDest('Morocco','🕌','Culture & markets')">
+          <span class="dest-emoji">🕌</span>
+          <div class="dest-name">Morocco</div>
+          <div class="dest-vibe">Culture & markets</div>
+        </div>
+        <div class="dest-chip" onclick="selectDest('Iceland','🌋','Nature & Northern Lights')">
+          <span class="dest-emoji">🌋</span>
+          <div class="dest-name">Iceland</div>
+          <div class="dest-vibe">Nature & lights</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ITINERARY -->
+  <div class="panel" id="panel-itinerary">
+    <div class="card">
+      <div class="card-title">Build your day-by-day itinerary</div>
+      <p>Enter your trip details and the AI will generate a full itinerary with activities, timing, and local tips.</p>
+      <div class="fields-row">
+        <div class="field">
+          <label>Destination</label>
+          <input type="text" id="itin-dest" placeholder="e.g. Barcelona, Spain"/>
+        </div>
+        <div class="field">
+          <label>Number of days</label>
+          <input type="number" id="itin-days" value="5" min="1" max="21"/>
+        </div>
+      </div>
+      <div class="fields-row">
+        <div class="field">
+          <label>Travel pace</label>
+          <select id="itin-pace">
+            <option>Relaxed (2–3 things/day)</option>
+            <option>Moderate (4–5 things/day)</option>
+            <option>Packed (6+ things/day)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Must-haves</label>
+          <input type="text" id="itin-must" placeholder="e.g. museums, beach, hiking"/>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="generateItinerary()">✦ Generate Itinerary</button>
+      <div class="ai-box" id="itin-ai">
+        <div class="ai-label">Your AI-Generated Itinerary</div>
+        <div class="ai-content" id="itin-ai-content"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOOKINGS -->
+  <div class="panel" id="panel-bookings">
+    <div class="notice">
+      ⚠️ Voyager provides AI-powered guidance on what to look for and where to book — it doesn't connect to live booking engines. Use the links and tips below to search real-time prices.
+    </div>
+    <div class="card">
+      <div class="card-title">✈️ Flight guidance</div>
+      <p>Get AI advice on the best booking strategies, airlines, and timing for your destination.</p>
+      <div class="fields-row">
+        <div class="field">
+          <label>Flying from</label>
+          <input type="text" id="flight-from" placeholder="e.g. Chicago (ORD)"/>
+        </div>
+        <div class="field">
+          <label>Flying to</label>
+          <input type="text" id="flight-to" placeholder="e.g. Tokyo (NRT)"/>
+        </div>
+      </div>
+      <div class="fields-row">
+        <div class="field">
+          <label>Approx. travel dates</label>
+          <input type="text" id="flight-dates" placeholder="e.g. Mid-June, 2 weeks"/>
+        </div>
+        <div class="field">
+          <label>Class preference</label>
+          <select id="flight-class">
+            <option>Economy</option>
+            <option>Premium Economy</option>
+            <option>Business</option>
+            <option>First</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="getFlightAdvice()">✦ Get Flight Advice</button>
+      <div class="ai-box" id="flight-ai">
+        <div class="ai-label">AI Flight Guidance</div>
+        <div class="ai-content" id="flight-ai-content"></div>
+      </div>
+      <div style="margin-top:1rem;">
+        <div style="font-size:0.8rem;font-weight:600;color:var(--slate);margin-bottom:0.5rem;">SEARCH FLIGHTS ON</div>
+        <div class="info-chips">
+          <a href="https://www.google.com/flights" target="_blank" class="chip teal" style="text-decoration:none">Google Flights</a>
+          <a href="https://www.kayak.com" target="_blank" class="chip teal" style="text-decoration:none">Kayak</a>
+          <a href="https://www.skyscanner.com" target="_blank" class="chip teal" style="text-decoration:none">Skyscanner</a>
+          <a href="https://www.expedia.com" target="_blank" class="chip teal" style="text-decoration:none">Expedia</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🏨 Hotel guidance</div>
+      <p>Get AI advice on neighborhoods, hotel types, and what to look for when booking accommodations.</p>
+      <div class="fields-row">
+        <div class="field">
+          <label>Destination</label>
+          <input type="text" id="hotel-dest" placeholder="e.g. Rome, Italy"/>
+        </div>
+        <div class="field">
+          <label>Accommodation style</label>
+          <select id="hotel-type">
+            <option>Hotel (3–4 star)</option>
+            <option>Boutique hotel</option>
+            <option>Luxury hotel (5 star)</option>
+            <option>Hostel / budget</option>
+            <option>Airbnb / apartment</option>
+            <option>Resort</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="getHotelAdvice()">✦ Get Hotel Advice</button>
+      <div class="ai-box" id="hotel-ai">
+        <div class="ai-label">AI Hotel Guidance</div>
+        <div class="ai-content" id="hotel-ai-content"></div>
+      </div>
+      <div style="margin-top:1rem;">
+        <div style="font-size:0.8rem;font-weight:600;color:var(--slate);margin-bottom:0.5rem;">SEARCH HOTELS ON</div>
+        <div class="info-chips">
+          <a href="https://www.booking.com" target="_blank" class="chip teal" style="text-decoration:none">Booking.com</a>
+          <a href="https://www.airbnb.com" target="_blank" class="chip teal" style="text-decoration:none">Airbnb</a>
+          <a href="https://www.hotels.com" target="_blank" class="chip teal" style="text-decoration:none">Hotels.com</a>
+          <a href="https://www.tripadvisor.com" target="_blank" class="chip teal" style="text-decoration:none">TripAdvisor</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BUDGET -->
+  <div class="panel" id="panel-budget">
+    <div class="card">
+      <div class="card-title">Estimate your trip budget</div>
+      <p>The AI will give you a realistic cost breakdown based on your destination, style, and duration.</p>
+      <div class="fields-row">
+        <div class="field">
+          <label>Destination</label>
+          <input type="text" id="budget-dest" placeholder="e.g. Thailand"/>
+        </div>
+        <div class="field">
+          <label>Duration (days)</label>
+          <input type="number" id="budget-days" value="7" min="1" max="60"/>
+        </div>
+      </div>
+      <div class="fields-row">
+        <div class="field">
+          <label>Travelers</label>
+          <input type="number" id="budget-travelers" value="2" min="1" max="10"/>
+        </div>
+        <div class="field">
+          <label>Spending style</label>
+          <select id="budget-style">
+            <option>Budget backpacker</option>
+            <option>Comfortable mid-range</option>
+            <option>Splurge-worthy</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Flying from (for flight cost estimate)</label>
+        <input type="text" id="budget-from" placeholder="e.g. New York"/>
+      </div>
+      <button class="btn btn-primary" onclick="estimateBudget()">✦ Estimate Budget</button>
+      <div class="ai-box" id="budget-ai">
+        <div class="ai-label">AI Budget Estimate</div>
+        <div class="ai-content" id="budget-ai-content"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function showTab(id) {
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  event.target.closest('.tab').classList.add('active');
+}
+
+function selectDest(name) {
+  document.getElementById('globalDest').value = name;
+  document.getElementById('itin-dest').value = name;
+  document.getElementById('hotel-dest').value = name;
+  document.getElementById('budget-dest').value = name;
+  showTab('itinerary');
+  document.querySelectorAll('.tab')[1].classList.add('active');
+  document.querySelectorAll('.tab')[0].classList.remove('active');
+}
+
+function startPlanning() {
+  const dest = document.getElementById('globalDest').value;
+  const days = document.getElementById('globalDays').value;
+  const budget = document.getElementById('globalBudget').value;
+  if (dest) {
+    if (document.getElementById('itin-dest')) document.getElementById('itin-dest').value = dest;
+    if (document.getElementById('itin-days') && days) document.getElementById('itin-days').value = days;
+    if (document.getElementById('hotel-dest')) document.getElementById('hotel-dest').value = dest;
+    if (document.getElementById('budget-dest')) document.getElementById('budget-dest').value = dest;
+    if (document.getElementById('budget-days') && days) document.getElementById('budget-days').value = days;
+    showTab('itinerary');
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab')[1].classList.add('active');
+  }
+}
+
+async function callClaude(prompt) {
+  const response = await fetch("/api/ask", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ prompt })
+  });
+  const data = await response.json();
+  if (data.result) return data.result;
+  throw new Error(data.error || "No response");
+}
+
+async function runAI(btnEl, boxId, contentId, prompt) {
+  const box = document.getElementById(boxId);
+  const content = document.getElementById(contentId);
+  const origText = btnEl.innerHTML;
+  btnEl.innerHTML = '<span class="spinner"></span> Thinking…';
+  btnEl.disabled = true;
+  box.classList.add('visible');
+  content.textContent = 'Getting your personalized recommendations…';
+  try {
+    const result = await callClaude(prompt);
+    content.textContent = result;
+  } catch(e) {
+    content.textContent = 'Something went wrong. Please try again.';
+  }
+  btnEl.innerHTML = origText;
+  btnEl.disabled = false;
+}
+
+// ── Features ─────────────────────────────────────────────────────────────────
+function getDestinations() {
+  const desc = document.getElementById('discoverPrompt').value || 'a memorable trip';
+  const style = document.getElementById('travelStyle').value;
+  const season = document.getElementById('travelSeason').value;
+  const prompt = `Recommend 3–4 travel destinations for someone who wants: "${desc}". Travel style: ${style}. Preferred season: ${season}. For each destination include: why it fits, best time to visit, 3 top experiences, and a rough cost level ($ to $$$$). Be specific and enthusiastic.`;
+  runAI(event.target, 'discover-ai', 'discover-ai-content', prompt);
+}
+
+function generateItinerary() {
+  const dest = document.getElementById('itin-dest').value || 'a great destination';
+  const days = document.getElementById('itin-days').value || 5;
+  const pace = document.getElementById('itin-pace').value;
+  const must = document.getElementById('itin-must').value;
+  const prompt = `Create a detailed ${days}-day itinerary for ${dest}. Pace: ${pace}. Must-include interests: ${must || 'general sightseeing and local food'}. For each day, give: morning, afternoon, and evening activities with specific place names, a local food recommendation, and one insider tip. Be practical about travel time between spots.`;
+  runAI(event.target, 'itin-ai', 'itin-ai-content', prompt);
+}
+
+function getFlightAdvice() {
+  const from = document.getElementById('flight-from').value || 'the US';
+  const to = document.getElementById('flight-to').value || 'the destination';
+  const dates = document.getElementById('flight-dates').value || 'flexible dates';
+  const cls = document.getElementById('flight-class').value;
+  const prompt = `Give practical flight booking advice for flying from ${from} to ${to} around ${dates} in ${cls}. Include: typical flight duration and layover options, best airlines on this route, how far in advance to book, tips for finding deals, which booking platforms to use, and any baggage or visa considerations. Be specific and actionable.`;
+  runAI(event.target, 'flight-ai', 'flight-ai-content', prompt);
+}
+
+function getHotelAdvice() {
+  const dest = document.getElementById('hotel-dest').value || 'the destination';
+  const type = document.getElementById('hotel-type').value;
+  const prompt = `Give hotel booking advice for ${dest} — specifically for ${type} accommodation. Include: the best neighborhoods to stay in and why, what to look for when reading reviews, typical price ranges per night, how far in advance to book, any local booking nuances, and 2–3 specific things to check before confirming a reservation. Be practical.`;
+  runAI(event.target, 'hotel-ai', 'hotel-ai-content', prompt);
+}
+
+function estimateBudget() {
+  const dest = document.getElementById('budget-dest').value || 'the destination';
+  const days = document.getElementById('budget-days').value || 7;
+  const travelers = document.getElementById('budget-travelers').value || 2;
+  const style = document.getElementById('budget-style').value;
+  const from = document.getElementById('budget-from').value || 'the US';
+  const prompt = `Create a realistic budget estimate for ${travelers} traveler(s) going to ${dest} for ${days} days from ${from}. Spending style: ${style}. Break down costs into: round-trip flights, accommodation per night (and total), daily meals, local transport, activities/entrance fees, travel insurance, and miscellaneous. Give a per-person and total estimate. Add 2–3 money-saving tips specific to this destination.`;
+  runAI(event.target, 'budget-ai', 'budget-ai-content', prompt);
+}
+</script>
+</body>
+</html>

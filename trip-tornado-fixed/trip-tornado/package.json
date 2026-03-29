@@ -1,0 +1,8 @@
+{
+  "name": "trip-tornado",
+  "version": "1.0.0",
+  "description": "AI-powered travel planning app",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.20.0"
+  }
+}
