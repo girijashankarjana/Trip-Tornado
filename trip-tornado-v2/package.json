@@ -1,0 +1,11 @@
+{
+  "name": "trip-tornado",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "vercel dev",
+    "serve": "serve ."
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.20.0"
+  }
+}
